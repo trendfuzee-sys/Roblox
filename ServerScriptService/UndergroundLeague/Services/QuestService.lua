@@ -1,0 +1,5 @@
+local QuestService = {Definitions={DailyCleanup={Goal=10, XP=350, Cash=150}, WeeklyBoss={Goal=3, XP=2500, Cash=1000}}}
+function QuestService:Init(remotes,data,progression) self.Remotes=remotes; self.Data=data; self.Progression=progression; remotes.Events.QuestAction.OnServerEvent:Connect(function(p,a,id) self:Handle(p,a,id) end) end
+function QuestService:Handle(player, action, id) local pr=self.Data.Profiles[player]; local def=self.Definitions[id]; if not pr or not def then return end; if action=="Accept" then pr.Quests[id]={Progress=0,Complete=false} elseif action=="Claim" and pr.Quests[id] and pr.Quests[id].Complete then self.Progression:Award(player,def.XP,def.Cash); pr.Quests[id]=nil end; self.Remotes.Events.ProfileSync:FireClient(player,pr) end
+function QuestService:Increment(player, id, amount) local pr=self.Data.Profiles[player]; local q=pr and pr.Quests[id]; local def=self.Definitions[id]; if q and def then q.Progress=math.min(def.Goal,q.Progress+(amount or 1)); q.Complete=q.Progress>=def.Goal end end
+return QuestService
